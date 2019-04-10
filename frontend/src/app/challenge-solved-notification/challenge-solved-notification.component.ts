@@ -8,6 +8,7 @@ import { SocketIoService } from '../Services/socket-io.service'
 
 import { library, dom } from '@fortawesome/fontawesome-svg-core'
 import { faClipboard, faFlagCheckered, faGlobe } from '@fortawesome/free-solid-svg-icons'
+import { HttpClient, HttpHeaders } from '@angular/common/http'
 
 library.add(faGlobe, faFlagCheckered, faClipboard)
 dom.watch()
@@ -22,9 +23,10 @@ export class ChallengeSolvedNotificationComponent implements OnInit {
   public notifications: any[] = []
   public showCtfFlagsInNotifications
   public showCtfCountryDetailsInNotifications
+  public ctfdHost
   public countryMap
 
-  constructor (private ngZone: NgZone, private configurationService: ConfigurationService, private challengeService: ChallengeService,private countryMappingService: CountryMappingService,private translate: TranslateService, private cookieService: CookieService, private ref: ChangeDetectorRef, private io: SocketIoService) {
+  constructor (private ngZone: NgZone, private configurationService: ConfigurationService, private challengeService: ChallengeService,private countryMappingService: CountryMappingService,private translate: TranslateService, private cookieService: CookieService, private ref: ChangeDetectorRef, private io: SocketIoService, private http: HttpClient) {
   }
 
   ngOnInit () {
@@ -48,6 +50,12 @@ export class ChallengeSolvedNotificationComponent implements OnInit {
           this.showCtfFlagsInNotifications = config.ctf.showFlagsInNotifications
         } else {
           this.showCtfFlagsInNotifications = false
+        }
+
+        if (config.ctf.ctfdHost !== null) {
+          this.ctfdHost = config.ctf.ctfdHost
+        } else {
+          this.ctfdHost = false
         }
 
         if (config.ctf.showCountryDetailsInNotifications) {
@@ -83,8 +91,26 @@ export class ChallengeSolvedNotificationComponent implements OnInit {
           country: country,
           copied: false
         })
+        if (this.ctfdHost) {
+          console.log(challenge)
+          this.attemptCTFdChallenge(challenge)
+        }
         this.ref.detectChanges()
       })
+  }
+
+  attemptCTFdChallenge (challenge) {
+    const httpOptions = {
+      headers: new HttpHeaders({
+        'Content-Type':  'application/json'
+      })
+    }
+    return this.http.get(this.ctfdHost + '/api/v1/challenges', { responseType: 'json/application' }).subscribe(result => {
+      const challenges = result
+      const challengeId = Number.parseInt('1', 10)
+      return this.http.post(this.ctfdHost + '/api/v1/challenges/attempt', { 'challenge_id': challengeId, 'submission': challenge.flag }, httpOptions).subscribe()
+    })
+
   }
 
   saveProgress () {
