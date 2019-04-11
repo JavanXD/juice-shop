@@ -9,6 +9,7 @@ import { SocketIoService } from '../Services/socket-io.service'
 import { library, dom } from '@fortawesome/fontawesome-svg-core'
 import { faClipboard, faFlagCheckered, faGlobe } from '@fortawesome/free-solid-svg-icons'
 import { HttpClient, HttpHeaders } from '@angular/common/http'
+import { environment } from '../../environments/environment'
 
 library.add(faGlobe, faFlagCheckered, faClipboard)
 dom.watch()
@@ -25,6 +26,7 @@ export class ChallengeSolvedNotificationComponent implements OnInit {
   public showCtfCountryDetailsInNotifications
   public ctfdHost
   public countryMap
+  public hostServer = environment.hostServer
 
   constructor (private ngZone: NgZone, private configurationService: ConfigurationService, private challengeService: ChallengeService,private countryMappingService: CountryMappingService,private translate: TranslateService, private cookieService: CookieService, private ref: ChangeDetectorRef, private io: SocketIoService, private http: HttpClient) {
   }
@@ -92,7 +94,6 @@ export class ChallengeSolvedNotificationComponent implements OnInit {
           copied: false
         })
         if (this.ctfdHost) {
-          console.log(challenge)
           this.attemptCTFdChallenge(challenge)
         }
         this.ref.detectChanges()
@@ -105,11 +106,15 @@ export class ChallengeSolvedNotificationComponent implements OnInit {
         'Content-Type':  'application/json'
       })
     }
-    return this.http.get(this.ctfdHost + '/api/v1/challenges', { responseType: 'json/application' }).subscribe(result => {
-      const challenges = result
-      const challengeId = Number.parseInt('1', 10)
-      return this.http.post(this.ctfdHost + '/api/v1/challenges/attempt', { 'challenge_id': challengeId, 'submission': challenge.flag }, httpOptions).subscribe()
-    })
+    return this.http.get< { status, data: [{key, id}] }>(this.hostServer + '/api/Challenges', { responseType: 'json' }).subscribe(result => {
+      if (result.status === 'success' && result.data && result.data.length > 0) {
+        const challenges = result.data
+        const challengeId = Number.parseInt(challenges.find(cl => cl.key === challenge.key).id, 10)
+        return this.http.post(this.ctfdHost + '/api/v1/challenges/attempt', { 'challenge_id': challengeId, 'submission': challenge.flag }, httpOptions).subscribe()
+      } else {
+        console.log(result)
+      }
+    },(err) => console.log(err))
 
   }
 
