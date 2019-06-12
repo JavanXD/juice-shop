@@ -101,11 +101,13 @@ export class ChallengeSolvedNotificationComponent implements OnInit {
   }
 
   attemptCTFdChallenge (challenge) {
-    const httpOptions = {
+    const httpOptions = new RequestOptions ({
       headers: new HttpHeaders({
         'Content-Type':  'application/json'
-      })
-    }
+      }),
+      withCredentials: true
+    })
+    
     return this.http.get< { status, data: [{key, id}] }>(this.hostServer + '/api/Challenges', { responseType: 'json' }).subscribe(result => {
       if (result.status === 'success' && result.data && result.data.length > 0) {
         const challenges = result.data
