@@ -6,3 +6,4 @@ application:
   gitHubRibbon: false
 ctf:
   showFlagsInNotifications: true
+  ctfdHost: http://10.20.33.101:8000

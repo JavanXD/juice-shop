@@ -8,6 +8,8 @@ import { SocketIoService } from '../Services/socket-io.service'
 
 import { library, dom } from '@fortawesome/fontawesome-svg-core'
 import { faClipboard, faFlagCheckered, faGlobe } from '@fortawesome/free-solid-svg-icons'
+import { HttpClient, HttpHeaders } from '@angular/common/http'
+import { environment } from '../../environments/environment'
 
 library.add(faGlobe, faFlagCheckered, faClipboard)
 dom.watch()
@@ -22,9 +24,11 @@ export class ChallengeSolvedNotificationComponent implements OnInit {
   public notifications: any[] = []
   public showCtfFlagsInNotifications
   public showCtfCountryDetailsInNotifications
+  public ctfdHost
   public countryMap
+  public hostServer = environment.hostServer
 
-  constructor (private ngZone: NgZone, private configurationService: ConfigurationService, private challengeService: ChallengeService,private countryMappingService: CountryMappingService,private translate: TranslateService, private cookieService: CookieService, private ref: ChangeDetectorRef, private io: SocketIoService) {
+  constructor (private ngZone: NgZone, private configurationService: ConfigurationService, private challengeService: ChallengeService,private countryMappingService: CountryMappingService,private translate: TranslateService, private cookieService: CookieService, private ref: ChangeDetectorRef, private io: SocketIoService, private http: HttpClient) {
   }
 
   ngOnInit () {
@@ -48,6 +52,12 @@ export class ChallengeSolvedNotificationComponent implements OnInit {
           this.showCtfFlagsInNotifications = config.ctf.showFlagsInNotifications
         } else {
           this.showCtfFlagsInNotifications = false
+        }
+
+        if (config.ctf.ctfdHost !== null) {
+          this.ctfdHost = config.ctf.ctfdHost
+        } else {
+          this.ctfdHost = false
         }
 
         if (config.ctf.showCountryDetailsInNotifications) {
@@ -83,8 +93,31 @@ export class ChallengeSolvedNotificationComponent implements OnInit {
           country: country,
           copied: false
         })
+        if (this.ctfdHost) {
+          this.attemptCTFdChallenge(challenge)
+        }
         this.ref.detectChanges()
       })
+  }
+
+  attemptCTFdChallenge (challenge) {
+    const httpOptions = {
+      headers: new HttpHeaders({
+        'Content-Type':  'application/json'
+      }),
+      withCredentials: true
+    }
+    
+    return this.http.get< { status, data: [{key, id}] }>(this.hostServer + '/api/Challenges', { responseType: 'json' }).subscribe(result => {
+      if (result.status === 'success' && result.data && result.data.length > 0) {
+        const challenges = result.data
+        const challengeId = Number.parseInt(challenges.find(cl => cl.key === challenge.key).id, 10)
+        return this.http.post(this.ctfdHost + '/api/v1/challenges/attempt', { 'challenge_id': challengeId, 'submission': challenge.flag }, httpOptions).subscribe()
+      } else {
+        console.log(result)
+      }
+    },(err) => console.log(err))
+
   }
 
   saveProgress () {
