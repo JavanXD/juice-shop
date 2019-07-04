@@ -2,8 +2,9 @@ const path = require('path')
 const fs = require('fs-extra')
 const morgan = require('morgan')
 const colors = require('colors/safe')
-const epilogue = require('epilogue-js')
+const finale = require('finale-rest')
 const express = require('express')
+const compression = require('compression')
 const helmet = require('helmet')
 const errorhandler = require('errorhandler')
 const cookieParser = require('cookie-parser')
@@ -25,6 +26,7 @@ const redirect = require('./routes/redirect')
 const angular = require('./routes/angular')
 const easterEgg = require('./routes/easterEgg')
 const premiumReward = require('./routes/premiumReward')
+const privacyPolicyProof = require('./routes/privacyPolicyProof')
 const appVersion = require('./routes/appVersion')
 const repeatNotification = require('./routes/repeatNotification')
 const continueCode = require('./routes/continueCode')
@@ -64,15 +66,20 @@ const basketItems = require('./routes/basketItems')
 const saveLoginIp = require('./routes/saveLoginIp')
 const userProfile = require('./routes/userProfile')
 const updateUserProfile = require('./routes/updateUserProfile')
+const videoHandler = require('./routes/videoHandler')
 const twoFactorAuth = require('./routes/2fa')
+const languageList = require('./routes/languages')
 const config = require('config')
+const imageCaptcha = require('./routes/imageCaptcha')
+const dataExport = require('./routes/dataExport')
+const erasureRequest = require('./routes/erasureRequest')
 
 errorhandler.title = `${config.get('application.name')} (Express ${utils.version('express')})`
 
 require('./lib/startup/validatePreconditions')()
 require('./lib/startup/validateConfig')()
 require('./lib/startup/cleanupFtpFolder')()
-require('./lib/startup/restoreOriginalLegalInformation')()
+require('./lib/startup/restoreOverwrittenFilesWithOriginals')()
 
 /* Locals */
 app.locals.captchaId = 0
@@ -80,6 +87,9 @@ app.locals.captchaReqId = 1
 app.locals.captchaBypassReqTimes = []
 app.locals.abused_ssti_bug = false
 app.locals.abused_ssrf_bug = false
+
+/* Compression for all requests */
+app.use(compression())
 
 /* Bludgeon solution for possible CORS problems: Allow everything! */
 app.options('*', cors())
@@ -190,7 +200,7 @@ app.use('/api/Complaints/:id', insecurity.denyAll())
 /* Recycles: POST and GET allowed when logged in only */
 app.get('/api/Recycles', recycles.blockRecycleItems())
 app.post('/api/Recycles', insecurity.isAuthorized())
-/* Challenge evaluation before epilogue takes over */
+/* Challenge evaluation before finale takes over */
 app.get('/api/Recycles/:id', recycles.sequelizeVulnerabilityChallenge())
 app.put('/api/Recycles/:id', insecurity.denyAll())
 app.delete('/api/Recycles/:id', insecurity.denyAll())
@@ -204,27 +214,50 @@ app.use('/api/SecurityAnswers/:id', insecurity.denyAll())
 app.use('/rest/user/authentication-details', insecurity.isAuthorized())
 app.use('/rest/basket/:id', insecurity.isAuthorized())
 app.use('/rest/basket/:id/order', insecurity.isAuthorized())
-/* Challenge evaluation before epilogue takes over */
+/* Challenge evaluation before finale takes over */
 app.post('/api/Feedbacks', verify.forgedFeedbackChallenge())
-/* Captcha verification before epilogue takes over */
+/* Captcha verification before finale takes over */
 app.post('/api/Feedbacks', captcha.verifyCaptcha())
 /* Captcha Bypass challenge verification */
 app.post('/api/Feedbacks', verify.captchaBypassChallenge())
-/* Register admin challenge verification */
+/* User registration challenge verifications before finale takes over */
 app.post('/api/Users', verify.registerAdminChallenge())
+app.post('/api/Users', verify.passwordRepeatChallenge())
 /* Unauthorized users are not allowed to access B2B API */
 app.use('/b2b/v2', insecurity.isAuthorized())
 /* Add item to basket */
 app.post('/api/BasketItems', basketItems())
-/* Verify the 2FA Token */
+/* Feedbacks: Do not allow changes of existing feedback */
+app.put('/api/Feedbacks/:id', insecurity.denyAll())
+/* PrivacyRequests: Only allowed for authenticated users */
+app.use('/api/PrivacyRequests', insecurity.isAuthorized())
+app.use('/api/PrivacyRequests/:id', insecurity.isAuthorized())
 
-app.post('/rest/2fa/verify', new RateLimit({ windowMs: 5 * 60 * 1000, max: 100 }))
-app.post('/rest/2fa/verify', twoFactorAuth.verify())
-/* Verifying DB related challenges can be postponed until the next request for challenges is coming via epilogue */
+/* Verify the 2FA Token */
+app.post('/rest/2fa/verify',
+  new RateLimit({ windowMs: 5 * 60 * 1000, max: 100 }),
+  twoFactorAuth.verify()
+)
+/* Check 2FA Status for the current User */
+app.get('/rest/2fa/status', insecurity.isAuthorized(), twoFactorAuth.status())
+/* Enable 2FA for the current User */
+app.post('/rest/2fa/setup',
+  new RateLimit({ windowMs: 5 * 60 * 1000, max: 100 }),
+  insecurity.isAuthorized(),
+  twoFactorAuth.setup()
+)
+/* Disable 2FA Status for the current User */
+app.post('/rest/2fa/disable',
+  new RateLimit({ windowMs: 5 * 60 * 1000, max: 100 }),
+  insecurity.isAuthorized(),
+  twoFactorAuth.disable()
+)
+
+/* Verifying DB related challenges can be postponed until the next request for challenges is coming via finale */
 app.use(verify.databaseRelatedChallenges())
 
 /* Generated API endpoints */
-epilogue.initialize({ app, sequelize: models.sequelize })
+finale.initialize({ app, sequelize: models.sequelize })
 
 const autoModels = [
   { name: 'User', exclude: ['password', 'totpSecret'] },
@@ -235,17 +268,18 @@ const autoModels = [
   { name: 'Complaint', exclude: [] },
   { name: 'Recycle', exclude: [] },
   { name: 'SecurityQuestion', exclude: [] },
-  { name: 'SecurityAnswer', exclude: [] }
+  { name: 'SecurityAnswer', exclude: [] },
+  { name: 'PrivacyRequest', exclude: [] }
 ]
 
 for (const { name, exclude } of autoModels) {
-  const resource = epilogue.resource({
+  const resource = finale.resource({
     model: models[name],
     endpoints: [`/api/${name}s`, `/api/${name}s/:id`],
     excludeAttributes: exclude
   })
 
-  // fix the api difference between epilogue and previously used sequlize-restful
+  // fix the api difference between finale (fka epilogue) and previously used sequlize-restful
   resource.all.send.before((req, res, context) => {
     context.instance = {
       status: 'success',
@@ -262,7 +296,7 @@ app.post('/rest/user/reset-password', resetPassword())
 app.get('/rest/user/security-question', securityQuestion())
 app.get('/rest/user/whoami', currentUser())
 app.get('/rest/user/authentication-details', authenticatedUsers())
-app.get('/rest/product/search', search())
+app.get('/rest/products/search', search())
 app.get('/rest/basket/:id', basket())
 app.post('/rest/basket/:id/checkout', order())
 app.put('/rest/basket/:id/coupon/:coupon', coupon())
@@ -274,15 +308,20 @@ app.put('/rest/continue-code/apply/:continueCode', restoreProgress())
 app.get('/rest/admin/application-version', appVersion())
 app.get('/redirect', redirect())
 app.get('/rest/captcha', captcha())
+app.get('/rest/image-captcha', imageCaptcha())
 app.get('/rest/track-order/:id', trackOrder())
 app.get('/rest/country-mapping', countryMapping())
 app.get('/rest/saveLoginIp', saveLoginIp())
+app.post('/rest/data-export', imageCaptcha.verifyCaptcha())
+app.post('/rest/data-export', dataExport())
+app.get('/rest/languages', languageList())
+app.get('/rest/user/erasure-request', erasureRequest())
 
 /* NoSQL API endpoints */
-app.get('/rest/product/:id/reviews', showProductReviews())
-app.put('/rest/product/:id/reviews', createProductReviews())
-app.patch('/rest/product/reviews', insecurity.isAuthorized(), updateProductReviews())
-app.post('/rest/product/reviews', insecurity.isAuthorized(), likeProductReviews())
+app.get('/rest/products/:id/reviews', showProductReviews())
+app.put('/rest/products/:id/reviews', createProductReviews())
+app.patch('/rest/products/reviews', insecurity.isAuthorized(), updateProductReviews())
+app.post('/rest/products/reviews', insecurity.isAuthorized(), likeProductReviews())
 
 /* B2B Order API */
 app.post('/b2b/v2/orders', b2bOrder())
@@ -290,6 +329,11 @@ app.post('/b2b/v2/orders', b2bOrder())
 /* File Serving */
 app.get('/the/devs/are/so/funny/they/hid/an/easter/egg/within/the/easter/egg', easterEgg())
 app.get('/this/page/is/hidden/behind/an/incredibly/high/paywall/that/could/only/be/unlocked/by/sending/1btc/to/us', premiumReward())
+app.get('/we/may/also/instruct/you/to/refuse/all/reasonably/necessary/responsibility', privacyPolicyProof())
+
+/* Routes for promotion video page */
+app.get('/promotion', videoHandler.promotionVideo())
+app.get('/video', videoHandler.getVideo())
 
 /* Routes for profile page */
 app.get('/profile', userProfile())
@@ -319,8 +363,9 @@ exports.start = async function (readyCallback) {
 
 exports.close = function (exitCode) {
   if (server) {
-    server.close(exitCode)
-  } else {
+    server.close()
+  }
+  if (exitCode !== undefined) {
     process.exit(exitCode)
   }
 }

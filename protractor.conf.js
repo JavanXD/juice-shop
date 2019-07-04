@@ -22,7 +22,10 @@ exports.config = {
 
   capabilities: {
     browserName: 'chrome',
-    proxy: proxy
+    proxy: proxy,
+    chromeOptions: {
+      args: ['--window-size=1024,768']
+    }
   },
 
   baseUrl: 'http://localhost:3000',
@@ -44,11 +47,17 @@ exports.config = {
     // Get cookie consent popup out of the way
     browser.get('/#')
     browser.manage().addCookie({ name: 'cookieconsent_status', value: 'dismiss' })
+
+    // Get welcome banner out of the way
+    let welcomeClose = element.all(by.className('welcome-banner-close-button'))
+    if (welcomeClose.isPresent()) { welcomeClose.first().click() }
+
+    browser.manage().addCookie({ name: 'welcome-banner-status', value: 'dismiss' })
   }
 }
 
 if (process.env.TRAVIS_BUILD_NUMBER) {
   exports.config.capabilities.chromeOptions = {
-    args: ['--headless', '--disable-gpu', '--window-size=800,600']
+    args: ['--headless', '--disable-gpu', '--window-size=1024,768']
   }
 }

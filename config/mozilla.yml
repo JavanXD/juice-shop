@@ -5,6 +5,7 @@ application:
   favicon: 'https://github.com/mozilla/ctf-austin/raw/master/app/public/favicon_v2.ico'
   showChallengeSolvedNotifications: true
   showChallengeHints: false
+  showHackingInstructor: false
   theme: deeporange-indigo
   gitHubRibbon: true
   twitterUrl: 'https://twitter.com/mozcloudsec'
@@ -25,6 +26,7 @@ application:
     dismissText: 'Never mind!'
     linkText: 'How can I turn this off?'
     linkUrl: 'https://support.mozilla.org/en-US/kb/disable-third-party-cookies'
+  privacyContactEmail: 'donotreply@mozilla-ctf.op'
   securityTxt:
     contact: 'mailto:donotreply@mozilla-ctf.op'
     encryption: ~

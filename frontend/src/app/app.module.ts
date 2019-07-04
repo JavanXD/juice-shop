@@ -21,10 +21,13 @@ import { BasketComponent } from './basket/basket.component'
 import { LoginComponent } from './login/login.component'
 import { ScoreBoardComponent } from './score-board/score-board.component'
 import { NavbarComponent } from './navbar/navbar.component'
+import { WelcomeComponent } from './welcome/welcome.component'
+import { WelcomeBannerComponent } from './welcome-banner/welcome-banner.component'
 import { SearchResultComponent } from './search-result/search-result.component'
 import { ForgotPasswordComponent } from './forgot-password/forgot-password.component'
 import { RegisterComponent } from './register/register.component'
 import { ContactComponent } from './contact/contact.component'
+import { DataSubjectComponent } from './data-subject/data-subject.component'
 import { ChangePasswordComponent } from './change-password/change-password.component'
 import { ProductDetailsComponent } from './product-details/product-details.component'
 import { ComplaintComponent } from './complaint/complaint.component'
@@ -39,6 +42,7 @@ import { OAuthComponent } from './oauth/oauth.component'
 import { TokenSaleComponent } from './token-sale/token-sale.component'
 import { ProductReviewEditComponent } from './product-review-edit/product-review-edit.component'
 import { TwoFactorAuthEnterComponent } from './two-factor-auth-enter/two-factor-auth-enter.component'
+import { PrivacySecurityComponent } from './privacy-security/privacy-security.component'
 import { ErrorPageComponent } from './error-page/error-page.component'
 /* Imported Services */
 import { RequestInterceptor } from './Services/request.interceptor'
@@ -57,6 +61,8 @@ import { TrackOrderService } from './Services/track-order.service'
 import { RecycleService } from './Services/recycle.service'
 import { BasketService } from './Services/basket.service'
 import { ChallengeService } from './Services/challenge.service'
+import { DataSubjectService } from './Services/data-subject.service'
+import { ImageCaptchaService } from './Services/image-captcha.service'
 /* Modules required for Angular Material */
 import { FlexLayoutModule } from '@angular/flex-layout'
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations'
@@ -81,6 +87,14 @@ import { MatTooltipModule } from '@angular/material/tooltip'
 import { MatMenuModule } from '@angular/material/menu'
 import { MatListModule } from '@angular/material/list'
 import { MatButtonToggleModule } from '@angular/material/button-toggle'
+import { LayoutModule } from '@angular/cdk/layout'
+import { MatGridListModule, MatRadioModule, MatSnackBarModule } from '@angular/material'
+import { MatBadgeModule } from '@angular/material/badge'
+/* Internal components */
+import { TwoFactorAuthComponent } from './two-factor-auth/two-factor-auth.component'
+import { DataExportComponent } from './data-export/data-export.component'
+import { LastLoginIpComponent } from './last-login-ip/last-login-ip.component'
+import { PrivacyPolicyComponent } from './privacy-policy/privacy-policy.component'
 
 export function HttpLoaderFactory (http: HttpClient) {
   return new TranslateHttpLoader(http, './../assets/i18n/', '.json')
@@ -95,10 +109,13 @@ export function HttpLoaderFactory (http: HttpClient) {
     LoginComponent,
     ScoreBoardComponent,
     NavbarComponent,
+    WelcomeComponent,
+    WelcomeBannerComponent,
     SearchResultComponent,
     ForgotPasswordComponent,
     RegisterComponent,
     ContactComponent,
+    DataSubjectComponent,
     ChangePasswordComponent,
     ProductDetailsComponent,
     ComplaintComponent,
@@ -113,9 +130,20 @@ export function HttpLoaderFactory (http: HttpClient) {
     TokenSaleComponent,
     ProductReviewEditComponent,
     TwoFactorAuthEnterComponent,
-    ErrorPageComponent
+    PrivacySecurityComponent,
+    ErrorPageComponent,
+    TwoFactorAuthComponent,
+    DataExportComponent,
+    LastLoginIpComponent,
+    PrivacyPolicyComponent
   ],
-  entryComponents: [ProductDetailsComponent, QrCodeComponent, UserDetailsComponent, ProductReviewEditComponent],
+  entryComponents: [
+    ProductDetailsComponent,
+    QrCodeComponent,
+    UserDetailsComponent,
+    ProductReviewEditComponent,
+    WelcomeBannerComponent
+  ],
   imports: [
     BrowserModule,
     Routing,
@@ -159,7 +187,12 @@ export function HttpLoaderFactory (http: HttpClient) {
     MatTooltipModule,
     MatMenuModule,
     MatListModule,
-    MatButtonToggleModule
+    MatButtonToggleModule,
+    LayoutModule,
+    MatGridListModule,
+    MatBadgeModule,
+    MatRadioModule,
+    MatSnackBarModule
   ],
   providers: [
     {
@@ -171,6 +204,7 @@ export function HttpLoaderFactory (http: HttpClient) {
     ConfigurationService,
     AdministrationService,
     SecurityQuestionService,
+    DataSubjectService,
     UserService,
     SecurityAnswerService,
     CaptchaService,
@@ -183,7 +217,8 @@ export function HttpLoaderFactory (http: HttpClient) {
     BasketService,
     ChallengeService,
     CookieService,
-    AdminGuard
+    AdminGuard,
+    ImageCaptchaService
   ],
   bootstrap: [AppComponent]
 })

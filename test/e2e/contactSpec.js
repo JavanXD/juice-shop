@@ -4,8 +4,6 @@ const pastebinLeakProduct = config.get('products').filter(product => product.key
 describe('/#/contact', () => {
   let comment, rating, submitButton, captcha
 
-  protractor.beforeEach.login({ email: 'admin@' + config.get('application.domain'), password: 'admin123' })
-
   beforeEach(() => {
     browser.get('/#/contact')
     comment = element(by.id('comment'))
@@ -16,6 +14,8 @@ describe('/#/contact', () => {
   })
 
   describe('challenge "forgedFeedback"', () => {
+    protractor.beforeEach.login({ email: 'admin@' + config.get('application.domain'), password: 'admin123' })
+
     it('should be possible to provide feedback as another user', () => {
       const EC = protractor.ExpectedConditions
       browser.executeScript('document.getElementById("userId").removeAttribute("hidden");')
@@ -38,7 +38,9 @@ describe('/#/contact', () => {
   })
 
   describe('challenge "xss4"', () => {
-    xit('should be possible to trick the sanitization with a masked XSS attack', () => {
+    protractor.beforeEach.login({ email: 'admin@' + config.get('application.domain'), password: 'admin123' })
+
+    it('should be possible to trick the sanitization with a masked XSS attack', () => {
       const EC = protractor.ExpectedConditions
 
       comment.sendKeys('<<script>Foo</script>iframe src="javascript:alert(`xss`)">')
@@ -46,24 +48,26 @@ describe('/#/contact', () => {
 
       submitButton.click()
 
+      browser.waitForAngularEnabled(false)
       browser.get('/#/about')
-      browser.wait(EC.alertIsPresent(), 5000, "'xss' alert is not present")
+      browser.wait(EC.alertIsPresent(), 5000, "'xss' alert is not present on /#/about")
       browser.switchTo().alert().then(alert => {
         expect(alert.getText()).toEqual('xss')
         alert.accept()
       })
 
       browser.get('/#/administration')
-      browser.wait(EC.alertIsPresent(), 5000, "'xss' alert is not present")
+      browser.wait(EC.alertIsPresent(), 10000, "'xss' alert is not present on /#/administration")
       browser.switchTo().alert().then(alert => {
         expect(alert.getText()).toEqual('xss')
         alert.accept()
         $$('.mat-cell.mat-column-remove > button').last().click()
         browser.wait(EC.stalenessOf(element(by.tagName('iframe'))), 5000)
       })
+      browser.waitForAngularEnabled(true)
     })
 
-    // protractor.expect.challengeSolved({ challenge: 'XSS Tier 4' })
+    protractor.expect.challengeSolved({ challenge: 'XSS Tier 4' })
   })
 
   describe('challenge "vulnerableComponent"', () => {
@@ -190,15 +194,6 @@ describe('/#/contact', () => {
       submitButton.click()
     })
     protractor.expect.challengeSolved({ challenge: 'DLP Failure Tier 1' })
-  })
-
-  describe('challenge "recyclesMissingItemChallenge"', () => {
-    it('should be possible to post the address of the lost product as feedback', () => {
-      comment.sendKeys('Starfleet HQ, 24-593 Federation Drive, San Francisco, CA')
-      rating.click()
-      submitButton.click()
-    })
-    protractor.expect.challengeSolved({ challenge: 'Lost in Recycling' })
   })
 
   function solveNextCaptcha () {

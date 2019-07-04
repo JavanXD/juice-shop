@@ -1,6 +1,6 @@
 const utils = require('../lib/utils')
 const challenges = require('../data/datacache').challenges
-const libxml = require('libxmljs')
+const libxml = require('libxmljs2')
 const os = require('os')
 const vm = require('vm')
 const fs = require('fs')
@@ -62,7 +62,7 @@ module.exports = function fileUpload () {
             res.status(410)
             next(new Error('B2B customer complaints via file upload have been deprecated for security reasons: ' + utils.trunc(xmlString, 200) + ' (' + file.originalname + ')'))
           } catch (err) {
-            if (err.message === 'Script execution timed out.') {
+            if (utils.contains(err.message, 'Script execution timed out')) {
               if (utils.notSolved(challenges.xxeDosChallenge)) {
                 utils.solve(challenges.xxeDosChallenge)
               }
@@ -73,9 +73,10 @@ module.exports = function fileUpload () {
               next(new Error('B2B customer complaints via file upload have been deprecated for security reasons: ' + err.message + ' (' + file.originalname + ')'))
             }
           }
+        } else {
+          res.status(410)
+          next(new Error('B2B customer complaints via file upload have been deprecated for security reasons (' + file.originalname + ')'))
         }
-        res.status(410)
-        next(new Error('B2B customer complaints via file upload have been deprecated for security reasons (' + file.originalname + ')'))
       }
       res.status(204).end()
     }

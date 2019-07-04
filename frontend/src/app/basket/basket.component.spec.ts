@@ -21,6 +21,7 @@ import { throwError } from 'rxjs/internal/observable/throwError'
 import { By } from '@angular/platform-browser'
 import { QrCodeComponent } from '../qr-code/qr-code.component'
 import { MatButtonToggleModule } from '@angular/material/button-toggle'
+import { EventEmitter } from '@angular/core'
 
 describe('BasketComponent', () => {
   let component: BasketComponent
@@ -45,6 +46,13 @@ describe('BasketComponent', () => {
     basketService.put.and.returnValue(of({}))
     basketService.checkout.and.returnValue(of({}))
     basketService.applyCoupon.and.returnValue(of({}))
+    configurationService = jasmine.createSpyObj('ConfigurationService',['getApplicationConfiguration'])
+    configurationService.getApplicationConfiguration.and.returnValue(of({}))
+    translateService = jasmine.createSpyObj('TranslateService', ['get'])
+    translateService.get.and.returnValue(of({}))
+    translateService.onLangChange = new EventEmitter()
+    translateService.onTranslationChange = new EventEmitter()
+    translateService.onDefaultLangChange = new EventEmitter()
 
     // Stub for WindowRefService
     windowRefService = {
@@ -59,12 +67,8 @@ describe('BasketComponent', () => {
       }
     }
 
-    configurationService = jasmine.createSpyObj('ConfigurationService',['getApplicationConfiguration'])
-    configurationService.getApplicationConfiguration.and.returnValue(of({}))
-    translateService = jasmine.createSpyObj('TranslateService', ['get'])
-    translateService.get.and.returnValue(of({}))
-
     TestBed.configureTestingModule({
+      declarations: [ BasketComponent ],
       imports: [
         HttpClientTestingModule,
         TranslateModule.forRoot(),
@@ -79,14 +83,13 @@ describe('BasketComponent', () => {
         MatDialogModule,
         MatButtonToggleModule
       ],
-      declarations: [ BasketComponent ],
       providers: [
+        { provide: TranslateService, useValue: translateService },
         { provide: MatDialog, useValue: dialog },
         { provide: BasketService, useValue: basketService },
         { provide: UserService , useValue: userService },
         { provide: WindowRefService, useValue: windowRefService },
-        { provide: ConfigurationService, useValue: configurationService },
-        TranslateService
+        { provide: ConfigurationService, useValue: configurationService }
       ]
     })
     .compileComponents()
@@ -336,7 +339,7 @@ describe('BasketComponent', () => {
     expect(component.error).toBe('Error')
   }))
 
-  xit('should accept a valid coupon code', () => {
+  it('should accept a valid coupon code', () => {
     basketService.applyCoupon.and.returnValue(of(42))
     translateService.get.and.returnValue(of('DISCOUNT_APPLIED'))
 
@@ -351,7 +354,7 @@ describe('BasketComponent', () => {
     expect(component.error).toBeUndefined()
   })
 
-  xit('should translate DISCOUNT_APPLIED message' , () => {
+  it('should translate DISCOUNT_APPLIED message' , () => {
     basketService.applyCoupon.and.returnValue(of(42))
     translateService.get.and.returnValue(of('Translation of DISCOUNT_APPLIED'))
     component.couponControl.setValue('')
@@ -405,7 +408,7 @@ describe('BasketComponent', () => {
     const data = {
       data: {
         data: '0x0f933ab9fCAAA782D0279C300D73750e1311EAE6',
-        url: 'https://etherscan.io/address/0x0f933ab9fcaaa782d0279c300d73750e1311eae6',
+        url: '/redirect?to=https://etherscan.io/address/0x0f933ab9fcaaa782d0279c300d73750e1311eae6',
         address: '0x0f933ab9fCAAA782D0279C300D73750e1311EAE6',
         title: 'TITLE_ETHER_ADDRESS'
       }
