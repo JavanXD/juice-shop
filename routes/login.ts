@@ -9,6 +9,7 @@ const security = require('../lib/insecurity')
 const challenges = require('../data/datacache').challenges
 const users = require('../data/datacache').users
 const config = require('config')
+const sqreen = require('sqreen')
 
 // vuln-code-snippet start loginAdminChallenge loginBenderChallenge loginJimChallenge
 module.exports = function login () {
@@ -19,6 +20,7 @@ module.exports = function login () {
         const token = security.authorize(user)
         user.bid = basket.id // keep track of original basket
         security.authenticatedUsers.put(token, user)
+        sqreen.auth_track(true, { username: req.body.email })
         res.json({ authentication: { token, bid: basket.id, umail: user.data.email } })
       }).catch(error => {
         next(error)
@@ -43,6 +45,7 @@ module.exports = function login () {
         } else if (user.data?.id) {
           afterLogin(user, res, next)
         } else {
+          sqreen.auth_track(false, { username: req.body.email })
           res.status(401).send(res.__('Invalid email or password.'))
         }
       }).catch(error => {
