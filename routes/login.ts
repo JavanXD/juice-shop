@@ -20,7 +20,7 @@ module.exports = function login () {
         const token = security.authorize(user)
         user.bid = basket.id // keep track of original basket
         security.authenticatedUsers.put(token, user)
-        sqreen.auth_track(true, { username: req.body.email })
+        sqreen.auth_track(true, { username: user.data.email })
         res.json({ authentication: { token, bid: basket.id, umail: user.data.email } })
       }).catch(error => {
         next(error)
