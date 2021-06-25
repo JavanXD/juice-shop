@@ -48,7 +48,6 @@ module.exports = function login () {
           res.status(401).send(res.__('Invalid email or password.'))
           tCellHooks.sendExpressLoginEventFailure(req.body.email, req.sessionID, req, false)
         }
-
       }).catch(error => {
         next(error)
       })
