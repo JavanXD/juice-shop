@@ -1,4 +1,4 @@
-const tcellAgent = require('tcell-agent')
+require('tcell-agent')
 
 /*
  * Copyright (c) 2014-2021 Bjoern Kimminich.
@@ -6,7 +6,6 @@ const tcellAgent = require('tcell-agent')
  */
 import dataErasure from './routes/dataErasure'
 import fs = require('fs')
-require('tcell-agent')
 const startTime = Date.now()
 const path = require('path')
 const morgan = require('morgan')
