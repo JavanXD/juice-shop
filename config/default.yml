@@ -240,5 +240,6 @@ products:
     price: 19.99
     image: coaster.png
 ctf:
-  showFlagsInNotifications: true
-  ctfdHost: http://10.22.53.198:8000
+  showFlagsInNotifications: false
+  showCountryDetailsInNotifications: none # Options: none  name  flag  both
+  countryMapping: ~
