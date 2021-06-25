@@ -2,11 +2,9 @@ FROM node:12 as installer
 COPY . /juice-shop
 WORKDIR /juice-shop
 RUN npm i -g typescript ts-node
-RUN npm i tcell-agent --save // tCell
 RUN npm install --production --unsafe-perm
 RUN npm dedupe
 RUN rm -rf frontend/node_modules
-RUN sed -i "1i require('tcell-agent')" server.ts // tCell TS
 
 FROM node:12-alpine
 ARG BUILD_DATE
