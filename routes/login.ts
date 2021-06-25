@@ -9,16 +9,18 @@ const security = require('../lib/insecurity')
 const challenges = require('../data/datacache').challenges
 const users = require('../data/datacache').users
 const config = require('config')
+const tCellHooks = require('tcell-hooks').v1
 
 // vuln-code-snippet start loginAdminChallenge loginBenderChallenge loginJimChallenge
 module.exports = function login () {
-  function afterLogin (user, res, next) {
+  function afterLogin (user, res, next, req) {
     verifyPostLoginChallenges(user) // vuln-code-snippet hide-line
     models.Basket.findOrCreate({ where: { UserId: user.data.id }, defaults: {} })
       .then(([basket]) => {
         const token = security.authorize(user)
         user.bid = basket.id // keep track of original basket
         security.authenticatedUsers.put(token, user)
+        tCellHooks.sendExpressLoginEventSuccess(user.data.email, token, req)
         res.json({ authentication: { token, bid: basket.id, umail: user.data.email } })
       }).catch(error => {
         next(error)
@@ -41,10 +43,12 @@ module.exports = function login () {
             }
           })
         } else if (user.data?.id) {
-          afterLogin(user, res, next)
+          afterLogin(user, res, next, req)
         } else {
           res.status(401).send(res.__('Invalid email or password.'))
+          tCellHooks.sendExpressLoginEventFailure(req.body.email, req.sessionID, req, false)
         }
+
       }).catch(error => {
         next(error)
       })
