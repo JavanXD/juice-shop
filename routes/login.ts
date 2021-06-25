@@ -15,12 +15,12 @@ const sqreen = require('sqreen')
 module.exports = function login () {
   function afterLogin (user, res, next) {
     verifyPostLoginChallenges(user) // vuln-code-snippet hide-line
+    sqreen.auth_track(true, { username: user.data.email })
     models.Basket.findOrCreate({ where: { UserId: user.data.id }, defaults: {} })
       .then(([basket]) => {
         const token = security.authorize(user)
         user.bid = basket.id // keep track of original basket
         security.authenticatedUsers.put(token, user)
-        sqreen.auth_track(true, { username: user.data.email })
         res.json({ authentication: { token, bid: basket.id, umail: user.data.email } })
       }).catch(error => {
         next(error)
