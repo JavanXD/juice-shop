@@ -13,7 +13,7 @@ const tCellHooks = require('tcell-hooks').v1
 
 // vuln-code-snippet start loginAdminChallenge loginBenderChallenge loginJimChallenge
 module.exports = function login () {
-  function afterLogin (user, res, next, req) {
+  function afterLogin (user, res, next) {
     verifyPostLoginChallenges(user) // vuln-code-snippet hide-line
     models.Basket.findOrCreate({ where: { UserId: user.data.id }, defaults: {} })
       .then(([basket]) => {
