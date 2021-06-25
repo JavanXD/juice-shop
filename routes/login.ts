@@ -45,8 +45,8 @@ module.exports = function login () {
         } else if (user.data?.id) {
           afterLogin(user, res, next, req)
         } else {
+          tCellHooks.sendExpressLoginEventFailure(req.body.email, (req.cookies?.token ? req.cookies.token : ""), req, false)
           res.status(401).send(res.__('Invalid email or password.'))
-          tCellHooks.sendExpressLoginEventFailure(req.body.email, req.sessionID, req, false)
         }
       }).catch(error => {
         next(error)
