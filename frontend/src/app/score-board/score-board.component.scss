@@ -1,10 +1,15 @@
+/*!
+ * Copyright (c) 2014-2021 Bjoern Kimminich.
+ * SPDX-License-Identifier: MIT
+ */
+
 mat-card,
 mat-expansion-panel,
 footer {
-  min-width: 300px;
+  margin-bottom: 35px;
   margin-left: 35px;
   margin-right: 35px;
-  margin-bottom: 35px;
+  min-width: 300px;
 }
 
 .category-container,
@@ -41,10 +46,40 @@ mat-table {
   font-size: small;
 }
 
-.overlay-fullscreen /deep/ .black-overlay{
+.overlay-fullscreen ::ng-deep .black-overlay {
   position: fixed;
 }
 
 .hacking-instructor-button {
   margin-left: 8px;
+}
+
+.vulnerability-mitigation-button {
+  margin-left: 8px;
+}
+
+.code-snippet-button {
+  margin-left: 8px;
+}
+
+.fill-remaining-space {
+  flex: 1 1 auto;
+}
+
+.disabled-challenges-infoBox {
+  align-self: center;
+  color: rgb(230, 74, 25);
+  cursor: default;
+  height: 100%;
+  margin: 0;
+
+  a {
+    color: rgb(84, 110, 122);
+    font-style: normal;
+  }
+}
+
+.backupButton {
+  align-self: center;
+  margin-left: 15px;
 }

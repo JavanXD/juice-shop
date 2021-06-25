@@ -1,10 +1,16 @@
 application:
   logo: JuiceShopCTF_Logo.png
   favicon: favicon_ctf.ico
-  showChallengeHints: false
   showVersionNumber: false
-  showHackingInstructor: false
-  gitHubRibbon: false
+  showGitHubLinks: false
+  localBackupEnabled: false
+  welcomeBanner:
+    showOnFirstStart: false
+challenges:
+  showHints: false
+  showCodeSnippets: solved
+hackingInstructor:
+  isEnabled: false
 ctf:
   showFlagsInNotifications: true
   showCountryDetailsInNotifications: both
@@ -33,10 +39,10 @@ ctf:
     reflectedXssChallenge:
       name: Uruguay
       code: UY
-    persistedXssChallengeUser:
+    persistedXssUserChallenge:
       name: Myanmar
       code: MM
-    persistedXssChallengeFeedback:
+    persistedXssFeedbackChallenge:
       name: Costa Rica
       code: CR
     restfulXssChallenge:
@@ -126,9 +132,6 @@ ctf:
     oauthUserPasswordChallenge:
       name: South Sudan
       code: SS
-    loginCisoChallenge:
-      name: Angola
-      code: AO
     loginSupportChallenge:
       name: Croatia
       code: HR
@@ -168,10 +171,10 @@ ctf:
     typosquattingAngularChallenge:
       name: Senegal
       code: SN
-    jwtTier1Challenge:
+    jwtUnsignedChallenge:
       name: New Zealand
       code: NZ
-    jwtTier2Challenge:
+    jwtForgedChallenge:
       name: Mongolia
       code: MN
     misplacedSignatureFileChallenge:
@@ -267,3 +270,48 @@ ctf:
     ghostLoginChallenge:
       name: Taiwan
       code: TW
+    dbSchemaChallenge:
+      name: Brunei
+      code: BN
+    ephemeralAccountantChallenge:
+      name: Denmark
+      code: DK
+    missingEncodingChallenge:
+      name: Armenia
+      code: AM
+    svgInjectionChallenge:
+      name: Tunisia
+      code: TN
+    exposedMetricsChallenge:
+      name: Japan
+      code: JP
+    freeDeluxeChallenge:
+      name: Vietnam
+      code: VN
+    csrfChallenge:
+      name: Luxembourg
+      code: LU
+    xssBonusChallenge:
+      name: Ethiopia
+      code: ET
+    resetPasswordUvoginChallenge:
+      name: Republic of South Africa
+      code: RSA
+    geoStalkingMetaChallenge:
+      name: Belgium
+      code: BE
+    geoStalkingVisualChallenge:
+      name: The Netherlands
+      code: NL
+    killChatbotChallenge:
+      name: Czechoslovakia
+      code: CSK
+    nullByteChallenge:
+      name: Burundi
+      code: BI
+    bullyChatbotChallenge:
+      name: Guam
+      code: GU
+    lfrChallenge:
+      name: Ireland
+      code: IE

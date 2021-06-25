@@ -1,4 +1,9 @@
-import { async, ComponentFixture, fakeAsync, TestBed } from '@angular/core/testing'
+/*
+ * Copyright (c) 2014-2021 Bjoern Kimminich.
+ * SPDX-License-Identifier: MIT
+ */
+
+import { ComponentFixture, fakeAsync, TestBed, waitForAsync } from '@angular/core/testing'
 import { TranslateModule } from '@ngx-translate/core'
 import { TokenSaleComponent } from './token-sale.component'
 import { of, throwError } from 'rxjs'
@@ -9,14 +14,13 @@ import { MatButtonModule } from '@angular/material/button'
 describe('TokenSaleComponent', () => {
   let component: TokenSaleComponent
   let fixture: ComponentFixture<TokenSaleComponent>
-  let configurationService
+  let configurationService: any
 
-  beforeEach(async(() => {
-
+  beforeEach(waitForAsync(() => {
     configurationService = jasmine.createSpyObj('ConfigurationService', ['getApplicationConfiguration'])
     configurationService.getApplicationConfiguration.and.returnValue(of({ application: { } }))
     TestBed.configureTestingModule({
-      declarations: [ TokenSaleComponent ],
+      declarations: [TokenSaleComponent],
       imports: [
         TranslateModule.forRoot(),
         MatCardModule,
@@ -26,7 +30,7 @@ describe('TokenSaleComponent', () => {
         { provide: ConfigurationService, useValue: configurationService }
       ]
     })
-    .compileComponents()
+      .compileComponents()
   }))
 
   beforeEach(() => {

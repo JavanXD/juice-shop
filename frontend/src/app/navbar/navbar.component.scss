@@ -1,3 +1,8 @@
+/*!
+ * Copyright (c) 2014-2021 Bjoern Kimminich.
+ * SPDX-License-Identifier: MIT
+ */
+
 mat-toolbar {
   height: auto;
   min-width: 100%;
@@ -5,9 +10,13 @@ mat-toolbar {
   width: 100%;
 }
 
+.mat-button {
+  padding-left: 8px;
+  padding-right: 8px;
+}
+
 .logo {
   max-height: 60px;
-  padding-top: 7px;
   width: auto;
 }
 
@@ -23,12 +32,6 @@ mat-toolbar {
 
 .fill-remaining-space {
   flex: 1 1 auto;
-}
-
-.search-input {
-  font-size: 14px;
-  margin-right: 10px;
-  width: 11%;
 }
 
 .language-select {
@@ -47,4 +50,32 @@ mat-toolbar {
 
 .flag-icon {
   margin-right: 2px;
+}
+
+:host ::ng-deep mat-form-field {
+  background: transparent !important;
+}
+
+:host ::ng-deep mat-icon {
+  background: transparent !important;
+}
+
+mat-search-bar {
+  font-size: 13px;
+  margin-right: 14px;
+}
+
+.buttons {
+  width: auto;
+}
+
+@media screen and (max-width: 959px) {
+  .buttons {
+    width: 48px;
+  }
+}
+
+:host ::ng-deep .mat-form-field-infix {
+  max-width: 250px !important;
+  width: 14vw !important;
 }

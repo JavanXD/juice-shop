@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2014-2021 Bjoern Kimminich.
+ * SPDX-License-Identifier: MIT
+ */
+
 import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing'
 import { fakeAsync, inject, TestBed, tick } from '@angular/core/testing'
 
@@ -5,7 +10,6 @@ import { SecurityQuestionService } from './security-question.service'
 
 describe('SecurityQuestionService', () => {
   beforeEach(() => {
-
     TestBed.configureTestingModule({
       imports: [HttpClientTestingModule],
       providers: [SecurityQuestionService]
@@ -18,8 +22,8 @@ describe('SecurityQuestionService', () => {
 
   it('should get all challenges directly from the rest api', inject([SecurityQuestionService, HttpTestingController],
     fakeAsync((service: SecurityQuestionService, httpMock: HttpTestingController) => {
-      let res
-      service.find(null).subscribe((data) => res = data)
+      let res: any
+      service.find(null).subscribe((data) => (res = data))
       const req = httpMock.expectOne('http://localhost:3000/api/SecurityQuestions/')
       req.flush({ data: 'apiResponse' })
       tick()
@@ -33,9 +37,9 @@ describe('SecurityQuestionService', () => {
 
   it('should get security question by user email directly from the rest api', inject([SecurityQuestionService, HttpTestingController],
     fakeAsync((service: SecurityQuestionService, httpMock: HttpTestingController) => {
-      let res
-      service.findBy('x@y.z').subscribe((data) => res = data)
-      const req = httpMock.expectOne('http://localhost:3000/rest\/user\/security-question\?email=x@y\.z')
+      let res: any
+      service.findBy('x@y.z').subscribe((data) => (res = data))
+      const req = httpMock.expectOne('http://localhost:3000/rest/user/security-question?email=x@y.z')
       req.flush({ question: 'apiResponse' })
       tick()
 

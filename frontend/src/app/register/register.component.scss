@@ -1,7 +1,12 @@
+/*!
+ * Copyright (c) 2014-2021 Bjoern Kimminich.
+ * SPDX-License-Identifier: MIT
+ */
+
 mat-card {
   height: auto;
-  min-width: 300px;
-  width: 35%;
+  min-width: 320px;
+  width: 25%;
 }
 
 mat-form-field {
@@ -13,6 +18,18 @@ mat-form-field {
   flex-direction: column;
   position: relative;
 
+}
+
+#registerButton {
+  margin-left: 20%;
+  margin-top: 30px;
+  width: 60%;
+}
+
+#alreadyACustomerLink {
+  align-self: center;
+  font-size: 12px;
+  margin-top: 40px;
 }
 
 .security-container {

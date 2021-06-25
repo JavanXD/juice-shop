@@ -1,7 +1,12 @@
+/*
+ * Copyright (c) 2014-2021 Bjoern Kimminich.
+ * SPDX-License-Identifier: MIT
+ */
+
 import { TranslateModule } from '@ngx-translate/core'
 import { UserService } from '../Services/user.service'
 import { HttpClientTestingModule } from '@angular/common/http/testing'
-import { async, ComponentFixture, fakeAsync, TestBed } from '@angular/core/testing'
+import { ComponentFixture, fakeAsync, TestBed, waitForAsync } from '@angular/core/testing'
 import { ChangePasswordComponent } from './change-password.component'
 import { ReactiveFormsModule } from '@angular/forms'
 
@@ -15,11 +20,10 @@ import { of, throwError } from 'rxjs'
 describe('ChangePasswordComponent', () => {
   let component: ChangePasswordComponent
   let fixture: ComponentFixture<ChangePasswordComponent>
-  let userService
+  let userService: any
 
-  beforeEach(async(() => {
-
-    userService = jasmine.createSpyObj('UserService',['changePassword'])
+  beforeEach(waitForAsync(() => {
+    userService = jasmine.createSpyObj('UserService', ['changePassword'])
     userService.changePassword.and.returnValue(of({}))
 
     TestBed.configureTestingModule({
@@ -33,10 +37,10 @@ describe('ChangePasswordComponent', () => {
         MatInputModule,
         MatButtonModule
       ],
-      declarations: [ ChangePasswordComponent ],
-      providers: [ { provide: UserService, useValue: userService } ]
+      declarations: [ChangePasswordComponent],
+      providers: [{ provide: UserService, useValue: userService }]
     })
-    .compileComponents()
+      .compileComponents()
   }))
 
   beforeEach(() => {
@@ -68,7 +72,8 @@ describe('ChangePasswordComponent', () => {
   it('should be compulsory to repeat new password', () => {
     component.repeatNewPasswordControl.setValue('')
     expect(component.passwordControl.valid).toBeFalsy()
-    component.repeatNewPasswordControl.setValue('pass')
+    component.newPasswordControl.setValue('passed')
+    component.repeatNewPasswordControl.setValue('passed')
     expect(component.repeatNewPasswordControl.valid).toBe(true)
   })
 
@@ -90,7 +95,7 @@ describe('ChangePasswordComponent', () => {
 
   it('should clear form and show confirmation after changing password', () => {
     userService.changePassword.and.returnValue(of({}))
-    spyOn(component,'resetForm')
+    spyOn(component, 'resetForm')
     component.passwordControl.setValue('old')
     component.newPasswordControl.setValue('foobar')
     component.repeatNewPasswordControl.setValue('foobar')
@@ -102,7 +107,7 @@ describe('ChangePasswordComponent', () => {
 
   it('should clear form and gracefully handle error on password change', fakeAsync(() => {
     userService.changePassword.and.returnValue(throwError('Error'))
-    spyOn(component,'resetForm')
+    spyOn(component, 'resetPasswords')
     console.log = jasmine.createSpy('log')
     component.passwordControl.setValue('old')
     component.newPasswordControl.setValue('foobar')
@@ -111,6 +116,6 @@ describe('ChangePasswordComponent', () => {
     expect(component.confirmation).toBeUndefined()
     expect(component.error).toBe('Error')
     expect(console.log).toHaveBeenCalledWith('Error')
-    expect(component.resetForm).toHaveBeenCalled()
+    expect(component.resetPasswords).toHaveBeenCalled()
   }))
 })

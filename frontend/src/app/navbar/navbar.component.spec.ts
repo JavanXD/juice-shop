@@ -1,9 +1,14 @@
+/*
+ * Copyright (c) 2014-2021 Bjoern Kimminich.
+ * SPDX-License-Identifier: MIT
+ */
+
 import { ChallengeService } from '../Services/challenge.service'
 import { SearchResultComponent } from '../search-result/search-result.component'
 import { TranslateModule, TranslateService } from '@ngx-translate/core'
 import { UserService } from '../Services/user.service'
 import { ConfigurationService } from '../Services/configuration.service'
-import { async, ComponentFixture, fakeAsync, TestBed, tick } from '@angular/core/testing'
+import { ComponentFixture, fakeAsync, TestBed, tick, waitForAsync } from '@angular/core/testing'
 import { HttpClientTestingModule } from '@angular/common/http/testing'
 import { NavbarComponent } from './navbar.component'
 import { Location } from '@angular/common'
@@ -27,9 +32,14 @@ import { MatTableModule } from '@angular/material/table'
 import { MatPaginatorModule } from '@angular/material/paginator'
 import { MatDialogModule } from '@angular/material/dialog'
 import { MatDividerModule } from '@angular/material/divider'
+import { MatGridListModule } from '@angular/material/grid-list'
+import { NgMatSearchBarModule } from 'ng-mat-search-bar'
+import { LoginGuard } from '../app.guard'
+import { MatRadioModule } from '@angular/material/radio'
+import { MatSnackBarModule } from '@angular/material/snack-bar'
 
 class MockSocket {
-  on (str: string, callback) {
+  on (str: string, callback: Function) {
     callback(str)
   }
 }
@@ -37,44 +47,46 @@ class MockSocket {
 describe('NavbarComponent', () => {
   let component: NavbarComponent
   let fixture: ComponentFixture<NavbarComponent>
-  let administrationService
-  let configurationService
-  let userService
-  let challengeService
-  let translateService
-  let cookieService
-  let mockSocket
-  let socketIoService
-  let location
+  let administrationService: any
+  let configurationService: any
+  let userService: any
+  let challengeService: any
+  let translateService: any
+  let cookieService: any
+  let mockSocket: any
+  let socketIoService: any
+  let location: Location
+  let loginGuard
 
-  beforeEach(async(() => {
-
-    administrationService = jasmine.createSpyObj('AdministrationService',['getApplicationVersion'])
+  beforeEach(waitForAsync(() => {
+    administrationService = jasmine.createSpyObj('AdministrationService', ['getApplicationVersion'])
     administrationService.getApplicationVersion.and.returnValue(of(undefined))
-    configurationService = jasmine.createSpyObj('ConfigurationService',['getApplicationConfiguration'])
+    configurationService = jasmine.createSpyObj('ConfigurationService', ['getApplicationConfiguration'])
     configurationService.getApplicationConfiguration.and.returnValue(of({}))
-    userService = jasmine.createSpyObj('UserService',['whoAmI','getLoggedInState','saveLastLoginIp'])
+    userService = jasmine.createSpyObj('UserService', ['whoAmI', 'getLoggedInState', 'saveLastLoginIp'])
     userService.whoAmI.and.returnValue(of({}))
     userService.getLoggedInState.and.returnValue(of(true))
     userService.saveLastLoginIp.and.returnValue(of({}))
-    userService.isLoggedIn = jasmine.createSpyObj('userService.isLoggedIn',['next'])
+    userService.isLoggedIn = jasmine.createSpyObj('userService.isLoggedIn', ['next'])
     userService.isLoggedIn.next.and.returnValue({})
-    challengeService = jasmine.createSpyObj('ChallengeService',['find'])
+    challengeService = jasmine.createSpyObj('ChallengeService', ['find'])
     challengeService.find.and.returnValue(of([{ solved: false }]))
-    cookieService = jasmine.createSpyObj('CookieService',['remove', 'get', 'put'])
+    cookieService = jasmine.createSpyObj('CookieService', ['remove', 'get', 'put'])
     mockSocket = new MockSocket()
     socketIoService = jasmine.createSpyObj('SocketIoService', ['socket'])
     socketIoService.socket.and.returnValue(mockSocket)
+    loginGuard = jasmine.createSpyObj('LoginGuard', ['tokenDecode'])
+    loginGuard.tokenDecode.and.returnValue(of(true))
 
     TestBed.configureTestingModule({
-      declarations: [ NavbarComponent, SearchResultComponent ],
+      declarations: [NavbarComponent, SearchResultComponent],
       imports: [
         RouterTestingModule.withRoutes([
           { path: 'search', component: SearchResultComponent }
         ]),
         HttpClientTestingModule,
-        TranslateModule.forRoot(),
         CookieModule.forRoot(),
+        TranslateModule.forRoot(),
         BrowserAnimationsModule,
         MatToolbarModule,
         MatIconModule,
@@ -88,7 +100,11 @@ describe('NavbarComponent', () => {
         MatTableModule,
         MatPaginatorModule,
         MatDialogModule,
-        MatDividerModule
+        MatDividerModule,
+        MatGridListModule,
+        NgMatSearchBarModule,
+        MatRadioModule,
+        MatSnackBarModule
       ],
       providers: [
         { provide: AdministrationService, useValue: administrationService },
@@ -97,13 +113,14 @@ describe('NavbarComponent', () => {
         { provide: ChallengeService, useValue: challengeService },
         { provide: CookieService, useValue: cookieService },
         { provide: SocketIoService, useValue: socketIoService },
+        { provide: LoginGuard, useValue: loginGuard },
         TranslateService
       ]
     })
-    .compileComponents()
+      .compileComponents()
 
-    location = TestBed.get(Location)
-    translateService = TestBed.get(TranslateService)
+    location = TestBed.inject(Location)
+    translateService = TestBed.inject(TranslateService)
   }))
 
   beforeEach(() => {
@@ -156,7 +173,7 @@ describe('NavbarComponent', () => {
 
   it('should set user email on page reload if user is authenticated', () => {
     userService.whoAmI.and.returnValue(of({ email: 'dummy@dummy.com' }))
-    localStorage.setItem('token','token')
+    localStorage.setItem('token', 'token')
     component.ngOnInit()
     expect(component.userEmail).toBe('dummy@dummy.com')
   })
@@ -179,13 +196,13 @@ describe('NavbarComponent', () => {
   it('should show GitHub button by default', () => {
     configurationService.getApplicationConfiguration.and.returnValue(of({}))
     component.ngOnInit()
-    expect(component.gitHubRibbon).toBe(true)
+    expect(component.showGitHubLink).toBe(true)
   })
 
   it('should hide GitHub ribbon if so configured', () => {
-    configurationService.getApplicationConfiguration.and.returnValue(of({ application: { gitHubRibbon: false } }))
+    configurationService.getApplicationConfiguration.and.returnValue(of({ application: { showGitHubLinks: false } }))
     component.ngOnInit()
-    expect(component.gitHubRibbon).toBe(false)
+    expect(component.showGitHubLink).toBe(false)
   })
 
   it('should log error while getting application configuration from backend API directly to browser console', fakeAsync(() => {
@@ -220,20 +237,26 @@ describe('NavbarComponent', () => {
   }))
 
   it('should remove authentication token from localStorage', () => {
-    spyOn(localStorage,'removeItem')
+    spyOn(localStorage, 'removeItem')
     component.logout()
     expect(localStorage.removeItem).toHaveBeenCalledWith('token')
   })
 
   it('should remove authentication token from cookies', () => {
     component.logout()
-    expect(cookieService.remove).toHaveBeenCalledWith('token', { domain: `${document.domain}` })
+    expect(cookieService.remove).toHaveBeenCalledWith('token')
   })
 
   it('should remove basket id from session storage', () => {
-    spyOn(sessionStorage,'removeItem')
+    spyOn(sessionStorage, 'removeItem')
     component.logout()
     expect(sessionStorage.removeItem).toHaveBeenCalledWith('bid')
+  })
+
+  it('should remove basket item total from session storage', () => {
+    spyOn(sessionStorage, 'removeItem')
+    component.logout()
+    expect(sessionStorage.removeItem).toHaveBeenCalledWith('itemTotal')
   })
 
   it('should set the login status to be false via UserService', () => {
@@ -253,7 +276,7 @@ describe('NavbarComponent', () => {
   }))
 
   it('should set selected a language', () => {
-    spyOn(translateService,'use').and.callFake((lang) => lang)
+    spyOn(translateService, 'use').and.callFake((lang: any) => lang)
     component.changeLanguage('xx')
     expect(translateService.use).toHaveBeenCalledWith('xx')
   })

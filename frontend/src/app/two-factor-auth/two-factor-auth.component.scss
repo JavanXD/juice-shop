@@ -1,7 +1,15 @@
+/*!
+ * Copyright (c) 2014-2021 Bjoern Kimminich.
+ * SPDX-License-Identifier: MIT
+ */
+
 mat-card {
-  height: auto;
-  min-width: 300px;
-  width: 35%;
+  display: block;
+  margin-bottom: 50px;
+  margin-left: auto;
+  margin-right: auto;
+  min-width: 320px;
+  width: 30%;
 }
 
 mat-form-field {
@@ -14,6 +22,13 @@ mat-form-field {
   position: relative;
 }
 
+#setupTwoFactorAuth,
+#disableTwoFactorAuth {
+  margin-left: 20%;
+  margin-top: 30px;
+  width: 60%;
+}
+
 .two-factor-qr-code {
   margin: 16px 0;
 }
@@ -23,7 +38,7 @@ mat-form-field {
 }
 
 #two-factor-auth-disable-title {
-  margin-bottom: 0px;
+  margin-bottom: 0;
 }
 
 button {

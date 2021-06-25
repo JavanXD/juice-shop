@@ -1,18 +1,24 @@
+/*
+ * Copyright (c) 2014-2021 Bjoern Kimminich.
+ * SPDX-License-Identifier: MIT
+ */
+
 import { CookieModule, CookieService } from 'ngx-cookie'
 import { HttpClientTestingModule } from '@angular/common/http/testing'
 import { TranslateModule, TranslateService } from '@ngx-translate/core'
 import { MatButtonModule } from '@angular/material/button'
 import { MatCardModule } from '@angular/material/card'
-import { async, ComponentFixture, fakeAsync, TestBed } from '@angular/core/testing'
+import { ComponentFixture, fakeAsync, TestBed, waitForAsync } from '@angular/core/testing'
 
 import { ServerStartedNotificationComponent } from './server-started-notification.component'
 import { ChallengeService } from '../Services/challenge.service'
 import { SocketIoService } from '../Services/socket-io.service'
 import { of, throwError } from 'rxjs'
 import { EventEmitter } from '@angular/core'
+import { MatIconModule } from '@angular/material/icon'
 
 class MockSocket {
-  on (str: string, callback) {
+  on (str: string, callback: Function) {
     callback()
   }
 }
@@ -20,14 +26,13 @@ class MockSocket {
 describe('ServerStartedNotificationComponent', () => {
   let component: ServerStartedNotificationComponent
   let fixture: ComponentFixture<ServerStartedNotificationComponent>
-  let challengeService
-  let translateService
-  let cookieService
-  let socketIoService
-  let mockSocket
+  let challengeService: any
+  let translateService: any
+  let cookieService: any
+  let socketIoService: any
+  let mockSocket: any
 
-  beforeEach(async(() => {
-
+  beforeEach(waitForAsync(() => {
     challengeService = jasmine.createSpyObj('ChallengeService', ['restoreProgress'])
     challengeService.restoreProgress.and.returnValue(of({}))
     translateService = jasmine.createSpyObj('TranslateService', ['get'])
@@ -45,9 +50,10 @@ describe('ServerStartedNotificationComponent', () => {
         CookieModule.forRoot(),
         HttpClientTestingModule,
         MatCardModule,
-        MatButtonModule
+        MatButtonModule,
+        MatIconModule
       ],
-      declarations: [ ServerStartedNotificationComponent ],
+      declarations: [ServerStartedNotificationComponent],
       providers: [
         { provide: ChallengeService, useValue: challengeService },
         { provide: TranslateService, useValue: translateService },
@@ -55,15 +61,15 @@ describe('ServerStartedNotificationComponent', () => {
         CookieService
       ]
     })
-    .compileComponents()
+      .compileComponents()
 
-    cookieService = TestBed.get(CookieService)
+    cookieService = TestBed.inject(CookieService)
   }))
 
   beforeEach(() => {
     fixture = TestBed.createComponent(ServerStartedNotificationComponent)
     component = fixture.componentInstance
-    cookieService.remove('continueCode', { domain: document.domain })
+    cookieService.remove('continueCode')
     fixture.detectChanges()
   })
 
@@ -72,77 +78,77 @@ describe('ServerStartedNotificationComponent', () => {
   })
 
   it('should keep continue code cookie after successfully restoring progress on server start', () => {
-    spyOn(mockSocket,'on')
+    spyOn(mockSocket, 'on')
     cookieService.put('continueCode', 'CODE')
     component.ngOnInit()
-    let callback = mockSocket.on.calls.argsFor(0)[1]
+    const callback = mockSocket.on.calls.argsFor(0)[1]
     callback()
     expect(mockSocket.on.calls.argsFor(0)[0]).toBe('server started')
     expect(cookieService.get('continueCode')).toBe('CODE')
   })
 
   it('should set auto-restore success-message when progress restore succeeds', () => {
-    spyOn(mockSocket,'on')
+    spyOn(mockSocket, 'on')
     translateService.get.and.returnValue(of('AUTO_RESTORED_PROGRESS'))
     cookieService.put('continueCode', 'CODE')
     component.ngOnInit()
-    let callback = mockSocket.on.calls.argsFor(0)[1]
+    const callback = mockSocket.on.calls.argsFor(0)[1]
     callback()
     expect(mockSocket.on.calls.argsFor(0)[0]).toBe('server started')
     expect(component.hackingProgress.autoRestoreMessage).toBeDefined()
   })
 
   it('should translate AUTO_RESTORED_PROGRESS message', () => {
-    spyOn(mockSocket,'on')
+    spyOn(mockSocket, 'on')
     translateService.get.and.returnValue(of('Translation of AUTO_RESTORED_PROGRESS'))
     cookieService.put('continueCode', 'CODE')
     component.ngOnInit()
-    let callback = mockSocket.on.calls.argsFor(0)[1]
+    const callback = mockSocket.on.calls.argsFor(0)[1]
     callback()
     expect(mockSocket.on.calls.argsFor(0)[0]).toBe('server started')
     expect(component.hackingProgress.autoRestoreMessage).toBe('Translation of AUTO_RESTORED_PROGRESS')
   })
 
   it('should log errors during automatic progress restore directly to browser console', fakeAsync(() => {
-    spyOn(mockSocket,'on')
+    spyOn(mockSocket, 'on')
     challengeService.restoreProgress.and.returnValue(throwError('Error'))
     cookieService.put('continueCode', 'CODE')
     console.log = jasmine.createSpy('log')
     component.ngOnInit()
-    let callback = mockSocket.on.calls.argsFor(0)[1]
+    const callback = mockSocket.on.calls.argsFor(0)[1]
     callback()
     expect(mockSocket.on.calls.argsFor(0)[0]).toBe('server started')
     expect(console.log).toHaveBeenCalledWith('Error')
   }))
 
   it('should set auto-restore error-message when progress restore failed', fakeAsync(() => {
-    spyOn(mockSocket,'on')
+    spyOn(mockSocket, 'on')
     challengeService.restoreProgress.and.returnValue(throwError('Error'))
     translateService.get.and.returnValue(of('AUTO_RESTORE_PROGRESS_FAILED'))
     cookieService.put('continueCode', 'CODE')
     component.ngOnInit()
-    let callback = mockSocket.on.calls.argsFor(0)[1]
+    const callback = mockSocket.on.calls.argsFor(0)[1]
     callback()
     expect(mockSocket.on.calls.argsFor(0)[0]).toBe('server started')
     expect(component.hackingProgress.autoRestoreMessage).toBeDefined()
   }))
 
   it('should translate AUTO_RESTORE_PROGRESS_FAILED message including the returned error', fakeAsync(() => {
-    spyOn(mockSocket,'on')
+    spyOn(mockSocket, 'on')
     challengeService.restoreProgress.and.returnValue(throwError('Error'))
     translateService.get.and.returnValue(of('Translation of AUTO_RESTORE_PROGRESS_FAILED: error'))
     cookieService.put('continueCode', 'CODE')
     component.ngOnInit()
-    let callback = mockSocket.on.calls.argsFor(0)[1]
+    const callback = mockSocket.on.calls.argsFor(0)[1]
     callback()
     expect(mockSocket.on.calls.argsFor(0)[0]).toBe('server started')
     expect(component.hackingProgress.autoRestoreMessage).toBe('Translation of AUTO_RESTORE_PROGRESS_FAILED: error')
   }))
 
   it('do nothing if continueCode cookie is not present', () => {
-    spyOn(mockSocket,'on')
+    spyOn(mockSocket, 'on')
     component.ngOnInit()
-    let callback = mockSocket.on.calls.argsFor(0)[1]
+    const callback = mockSocket.on.calls.argsFor(0)[1]
     callback()
     expect(mockSocket.on.calls.argsFor(0)[0]).toBe('server started')
     expect(component.hackingProgress.autoRestoreMessage).toBeUndefined()

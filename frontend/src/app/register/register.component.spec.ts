@@ -1,9 +1,14 @@
+/*
+ * Copyright (c) 2014-2021 Bjoern Kimminich.
+ * SPDX-License-Identifier: MIT
+ */
+
 import { LoginComponent } from '../login/login.component'
 import { SecurityAnswerService } from '../Services/security-answer.service'
 import { UserService } from '../Services/user.service'
 import { SecurityQuestionService } from '../Services/security-question.service'
 import { HttpClientTestingModule } from '@angular/common/http/testing'
-import { async, ComponentFixture, fakeAsync, TestBed, tick } from '@angular/core/testing'
+import { ComponentFixture, fakeAsync, flush, TestBed, tick, waitForAsync } from '@angular/core/testing'
 import { RegisterComponent } from './register.component'
 import { ReactiveFormsModule } from '@angular/forms'
 import { RouterTestingModule } from '@angular/router/testing'
@@ -18,17 +23,20 @@ import { MatCardModule } from '@angular/material/card'
 import { MatIconModule } from '@angular/material/icon'
 import { of, throwError } from 'rxjs'
 import { MatCheckboxModule } from '@angular/material/checkbox'
+import { MatSnackBarModule } from '@angular/material/snack-bar'
+import { MatTooltipModule } from '@angular/material/tooltip'
+import { MatPasswordStrengthModule } from '@angular-material-extensions/password-strength'
+import { MatSlideToggleModule } from '@angular/material/slide-toggle'
 
 describe('RegisterComponent', () => {
   let component: RegisterComponent
   let fixture: ComponentFixture<RegisterComponent>
-  let securityAnswerService
-  let securityQuestionService
-  let userService
-  let location
+  let securityAnswerService: any
+  let securityQuestionService: any
+  let userService: any
+  let location: Location
 
-  beforeEach(async(() => {
-
+  beforeEach(waitForAsync(() => {
     securityAnswerService = jasmine.createSpyObj('SecurityAnswerService', ['save'])
     securityAnswerService.save.and.returnValue(of({}))
     securityQuestionService = jasmine.createSpyObj('SecurityQuestionService', ['find'])
@@ -41,6 +49,7 @@ describe('RegisterComponent', () => {
           { path: 'login', component: LoginComponent }
         ]),
         TranslateModule.forRoot(),
+        MatPasswordStrengthModule.forRoot(),
         HttpClientTestingModule,
         ReactiveFormsModule,
         BrowserAnimationsModule,
@@ -50,18 +59,22 @@ describe('RegisterComponent', () => {
         MatInputModule,
         MatSelectModule,
         MatButtonModule,
-        MatIconModule
+        MatIconModule,
+        MatSnackBarModule,
+        MatTooltipModule,
+        MatIconModule,
+        MatSlideToggleModule
       ],
-      declarations: [ RegisterComponent, LoginComponent ],
+      declarations: [RegisterComponent, LoginComponent],
       providers: [
         { provide: SecurityAnswerService, useValue: securityAnswerService },
         { provide: SecurityQuestionService, useValue: securityQuestionService },
         { provide: UserService, useValue: userService }
       ]
     })
-    .compileComponents()
+      .compileComponents()
 
-    location = TestBed.get(Location)
+    location = TestBed.inject(Location)
   }))
 
   beforeEach(() => {
@@ -119,8 +132,8 @@ describe('RegisterComponent', () => {
   })
 
   it('password and repeat password should be the same', () => {
-    let password: string = 'aaaaa'
-    let passwordRepeat: string = 'aaaaa'
+    const password: string = 'aaaaa'
+    const passwordRepeat: string = 'aaaaa'
     component.passwordControl.setValue(password)
     component.repeatPasswordControl.setValue('bbbbb')
     expect(component.repeatPasswordControl.valid).toBeFalsy()
@@ -129,25 +142,27 @@ describe('RegisterComponent', () => {
   })
 
   it('redirects to login page after user registration', fakeAsync(() => {
-    userService.save.and.returnValue(of({ id: 1 }))
+    userService.save.and.returnValue(of({ id: 1, question: 'Wat is?' }))
     securityAnswerService.save.and.returnValue(of({}))
-    component.securityQuestions = [ { id: 1 } ]
+    component.securityQuestions = [{ id: 1, question: 'Wat is?' }]
     component.emailControl.setValue('x@x.xx')
     component.passwordControl.setValue('password')
     component.repeatPasswordControl.setValue('password')
     component.securityQuestionControl.setValue(1)
     component.securityAnswerControl.setValue('Answer')
-    const user = { email: 'x@x.xx', password: 'password', passwordRepeat: 'password', securityQuestion: { id: 1 }, securityAnswer: 'Answer' }
+    const user = { email: 'x@x.xx', password: 'password', passwordRepeat: 'password', securityQuestion: { id: 1, question: 'Wat is?' }, securityAnswer: 'Answer' }
     const securityAnswerObject = { UserId: 1, answer: 'Answer', SecurityQuestionId: 1 }
     component.save()
     tick()
     expect(userService.save.calls.argsFor(0)[0]).toEqual(user)
     expect(securityAnswerService.save.calls.argsFor(0)[0]).toEqual(securityAnswerObject)
     expect(location.path()).toBe('/login')
+    fixture.destroy()
+    flush()
   }))
 
   it('loading secret questions', () => {
-    securityQuestionService.find.and.returnValue(of([ { question: 'WTF?' }, { question: 'WAT?' } ]))
+    securityQuestionService.find.and.returnValue(of([{ id: 1, question: 'WTF?' }, { id: 2, question: 'WAT?' }]))
     component.ngOnInit()
     expect(component.securityQuestions.length).toBe(2)
     expect(component.securityQuestions[0].question).toBe('WTF?')

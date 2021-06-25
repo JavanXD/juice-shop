@@ -1,5 +1,11 @@
+/*
+ * Copyright (c) 2014-2021 Bjoern Kimminich.
+ * SPDX-License-Identifier: MIT
+ */
+
 import { Component } from '@angular/core'
-import * as jwt_decode from 'jwt-decode'
+import { DomSanitizer } from '@angular/platform-browser'
+import * as jwtDecode from 'jwt-decode'
 
 @Component({
   selector: 'app-last-login-ip',
@@ -9,21 +15,26 @@ import * as jwt_decode from 'jwt-decode'
 })
 
 export class LastLoginIpComponent {
-
-  lastLoginIp: string = '?'
+  lastLoginIp: any = '?'
+  constructor (private readonly sanitizer: DomSanitizer) {}
 
   ngOnInit () {
-    this.parseAuthToken()
+    try {
+      this.parseAuthToken()
+    } catch (err) {
+      console.log(err)
+    }
   }
 
   parseAuthToken () {
     let payload = {} as any
-    if (localStorage.getItem('token')) {
-      payload = jwt_decode(localStorage.getItem('token'))
+    const token = localStorage.getItem('token')
+    if (token) {
+      payload = jwtDecode(token)
       if (payload.data.lastLoginIp) {
-        this.lastLoginIp = payload.data.lastLoginIp
+        // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+        this.lastLoginIp = this.sanitizer.bypassSecurityTrustHtml(`<small>${payload.data.lastLoginIp}</small>`)
       }
     }
   }
-
 }

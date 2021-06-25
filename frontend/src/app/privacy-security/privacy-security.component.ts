@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2014-2021 Bjoern Kimminich.
+ * SPDX-License-Identifier: MIT
+ */
+
 import { Component } from '@angular/core'
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout'
 import { Observable } from 'rxjs'
@@ -9,7 +14,7 @@ import { map } from 'rxjs/operators'
   styleUrls: ['./privacy-security.component.scss']
 })
 export class PrivacySecurityComponent {
-  Ip: string
+  Ip!: string
   windowWidth: number = window.innerWidth
   ngAfterViewInit () {
     this.windowWidth = window.innerWidth
@@ -20,5 +25,5 @@ export class PrivacySecurityComponent {
       map(result => result.matches)
     )
 
-  constructor (private breakpointObserver: BreakpointObserver) {}
+  constructor (private readonly breakpointObserver: BreakpointObserver) {}
 }

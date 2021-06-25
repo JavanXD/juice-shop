@@ -1,6 +1,11 @@
+/*
+ * Copyright (c) 2014-2021 Bjoern Kimminich.
+ * SPDX-License-Identifier: MIT
+ */
+
 import { MAT_DIALOG_DATA } from '@angular/material/dialog'
 import { Component, Inject, OnInit } from '@angular/core'
-import { library, dom } from '@fortawesome/fontawesome-svg-core'
+import { dom, library } from '@fortawesome/fontawesome-svg-core'
 import { faArrowCircleLeft } from '@fortawesome/free-solid-svg-icons'
 
 library.add(faArrowCircleLeft)
@@ -12,11 +17,10 @@ dom.watch()
   styleUrls: ['./qr-code.component.scss']
 })
 export class QrCodeComponent implements OnInit {
-
-  public title: string
-  public url: string
-  public address: string
-  public data: string
+  public title!: string
+  public url!: string
+  public address!: string
+  public data!: string
   constructor (@Inject(MAT_DIALOG_DATA) public dialogData: any) { }
 
   ngOnInit () {
@@ -25,5 +29,4 @@ export class QrCodeComponent implements OnInit {
     this.address = this.dialogData.address
     this.data = this.dialogData.data
   }
-
 }

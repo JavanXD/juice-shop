@@ -1,13 +1,19 @@
-mat-card {
-  height: auto;
-  min-width: 380px;
-  width: 25%;
-}
+/*!
+ * Copyright (c) 2014-2021 Bjoern Kimminich.
+ * SPDX-License-Identifier: MIT
+ */
 
 mat-table,
 .table-heading {
-  min-width: 420px;
-  width: 50%;
+  width: 90%;
+}
+
+.heading {
+  background: rgba(0, 0, 0, 0.2);
+  height: 35px;
+  justify-content: center;
+  padding: 0 20px;
+  width: 90%;
 }
 
 .product-name {
@@ -26,20 +32,22 @@ mat-table,
   margin-right: 10px;
 }
 
+.mat-own-card {
+  display: block;
+  margin-left: 20%;
+  margin-right: 20%;
+}
+
 .bonus-container {
-  margin-top: 10px;
-  place-content: stretch center;
   align-items: center;
-  flex-direction: column;
   box-sizing: border-box;
   display: flex;
+  flex-direction: column;
+  margin-top: 10px;
+  place-content: stretch center;
 
   h2 {
     margin: 0;
     padding: 0;
-  }
-
-  p {
-    color: #eee;
   }
 }

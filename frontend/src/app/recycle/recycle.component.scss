@@ -1,16 +1,7 @@
-mat-card.form-card {
-  margin-bottom: 30px;
-  margin-left: 8.3333%;
-  min-width: 300px;
-  width: 50%;
-}
-
-div.responsibility-container {
-  margin-left: 8.3333%;
-  margin-right: 8.3333%;
-  min-width: 300px;
-  width: 50%;
-}
+/*!
+ * Copyright (c) 2014-2021 Bjoern Kimminich.
+ * SPDX-License-Identifier: MIT
+ */
 
 mat-form-field {
   padding-top: 10px;
@@ -23,7 +14,15 @@ mat-form-field {
 }
 
 button {
+  margin-left: 20%;
   margin-top: 5px;
+  width: 60%;
+}
+
+.mat-own-card {
+  display: block;
+  margin-left: 10%;
+  margin-right: 10%;
 }
 
 mat-card img {

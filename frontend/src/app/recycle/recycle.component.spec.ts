@@ -1,4 +1,9 @@
-import { TranslateModule } from '@ngx-translate/core'
+/*
+ * Copyright (c) 2014-2021 Bjoern Kimminich.
+ * SPDX-License-Identifier: MIT
+ */
+
+import { TranslateModule, TranslateService } from '@ngx-translate/core'
 import { MatDatepickerModule } from '@angular/material/datepicker'
 import { ConfigurationService } from '../Services/configuration.service'
 import { UserService } from '../Services/user.service'
@@ -8,7 +13,7 @@ import { MatCardModule } from '@angular/material/card'
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations'
 import { MatButtonModule } from '@angular/material/button'
 import { MatInputModule } from '@angular/material/input'
-import { async, ComponentFixture, fakeAsync, TestBed } from '@angular/core/testing'
+import { ComponentFixture, fakeAsync, TestBed, waitForAsync } from '@angular/core/testing'
 
 import { RecycleComponent } from './recycle.component'
 import { MatFormFieldModule } from '@angular/material/form-field'
@@ -16,26 +21,45 @@ import { ReactiveFormsModule } from '@angular/forms'
 import { MatCheckboxModule } from '@angular/material/checkbox'
 import { MatNativeDateModule } from '@angular/material/core'
 import { of, throwError } from 'rxjs'
+import { AddressComponent } from '../address/address.component'
+import { RouterTestingModule } from '@angular/router/testing'
+import { EventEmitter } from '@angular/core'
+import { MatIconModule } from '@angular/material/icon'
+import { MatTableModule } from '@angular/material/table'
+import { MatToolbarModule } from '@angular/material/toolbar'
+import { MatRadioModule } from '@angular/material/radio'
+import { MatTooltipModule } from '@angular/material/tooltip'
+import { MatDialogModule } from '@angular/material/dialog'
+import { MatDividerModule } from '@angular/material/divider'
+import { MatSnackBar } from '@angular/material/snack-bar'
 
 describe('RecycleComponent', () => {
   let component: RecycleComponent
   let fixture: ComponentFixture<RecycleComponent>
-  let recycleService
-  let userService
-  let configurationService
+  let recycleService: any
+  let userService: any
+  let configurationService: any
+  let translateService
+  let snackBar: any
 
-  beforeEach(async(() => {
-
-    recycleService = jasmine.createSpyObj('RecycleService',['save','find'])
+  beforeEach(waitForAsync(() => {
+    recycleService = jasmine.createSpyObj('RecycleService', ['save', 'find'])
     recycleService.save.and.returnValue(of({}))
     recycleService.find.and.returnValue(of([{}]))
-    userService = jasmine.createSpyObj('UserService',['whoAmI'])
+    userService = jasmine.createSpyObj('UserService', ['whoAmI'])
     userService.whoAmI.and.returnValue(of({}))
-    configurationService = jasmine.createSpyObj('ConfigurationService',['getApplicationConfiguration'])
+    configurationService = jasmine.createSpyObj('ConfigurationService', ['getApplicationConfiguration'])
     configurationService.getApplicationConfiguration.and.returnValue(of({}))
+    translateService = jasmine.createSpyObj('TranslateService', ['get'])
+    translateService.get.and.returnValue(of({}))
+    translateService.onLangChange = new EventEmitter()
+    translateService.onTranslationChange = new EventEmitter()
+    translateService.onDefaultLangChange = new EventEmitter()
+    snackBar = jasmine.createSpyObj('MatSnackBar', ['open'])
 
     TestBed.configureTestingModule({
       imports: [
+        RouterTestingModule,
         TranslateModule.forRoot(),
         HttpClientTestingModule,
         BrowserAnimationsModule,
@@ -46,16 +70,25 @@ describe('RecycleComponent', () => {
         MatCardModule,
         MatCheckboxModule,
         MatDatepickerModule,
-        MatNativeDateModule
+        MatNativeDateModule,
+        MatIconModule,
+        MatToolbarModule,
+        MatTableModule,
+        MatRadioModule,
+        MatTooltipModule,
+        MatDialogModule,
+        MatDividerModule
       ],
-      declarations: [ RecycleComponent ],
+      declarations: [RecycleComponent, AddressComponent],
       providers: [
         { provide: RecycleService, useValue: recycleService },
         { provide: UserService, useValue: userService },
-        { provide: ConfigurationService, useValue: configurationService }
+        { provide: ConfigurationService, useValue: configurationService },
+        { provide: TranslateService, useValue: translateService },
+        { provide: MatSnackBar, useValue: snackBar }
       ]
     })
-    .compileComponents()
+      .compileComponents()
   }))
 
   beforeEach(() => {
@@ -69,14 +102,12 @@ describe('RecycleComponent', () => {
   })
 
   it('should reset the form by calling resetForm', () => {
-    component.recycleAddressControl.setValue('Address')
+    component.addressId = '1'
     component.recycleQuantityControl.setValue('100')
     component.pickUpDateControl.setValue('10/7/2018')
     component.pickup.setValue(true)
     component.resetForm()
-    expect(component.recycleAddressControl.value).toBe('')
-    expect(component.recycleAddressControl.pristine).toBe(true)
-    expect(component.recycleAddressControl.untouched).toBe(true)
+    expect(component.addressId).toBeUndefined()
     expect(component.recycleQuantityControl.value).toBe('')
     expect(component.recycleQuantityControl.untouched).toBe(true)
     expect(component.recycleQuantityControl.pristine).toBe(true)
@@ -107,36 +138,42 @@ describe('RecycleComponent', () => {
   it('should display pickup message and reset recycle form on saving', () => {
     recycleService.save.and.returnValue(of({}))
     userService.whoAmI.and.returnValue(of({}))
-    spyOn(component,'initRecycle')
-    component.recycleAddressControl.setValue('Address')
+    translateService.get.and.returnValue(of('CONFIRM_RECYCLING_BOX'))
+    spyOn(component, 'initRecycle')
+    spyOn(component.addressComponent, 'load')
+    component.addressId = '1'
     component.recycleQuantityControl.setValue(100)
     component.pickup.setValue(false)
-    const recycle = { UserId: undefined, address: 'Address', quantity: 100 }
+    const recycle = { UserId: undefined, AddressId: '1', quantity: 100 }
     component.save()
     expect(recycleService.save.calls.count()).toBe(1)
     expect(recycleService.save.calls.argsFor(0)[0]).toEqual(recycle)
     expect(component.initRecycle).toHaveBeenCalled()
-    expect(component.confirmation).toBe('Thank you for using our recycling service. We will deliver your recycle box asap.')
+    expect(component.addressComponent.load).toHaveBeenCalled()
+    expect(translateService.get).toHaveBeenCalledWith('CONFIRM_RECYCLING_BOX')
   })
 
   it('should display pickup message and reset recycle form on saving when pickup is selected', () => {
     recycleService.save.and.returnValue(of({ isPickup: true, pickupDate: '10/7/2018' }))
     userService.whoAmI.and.returnValue(of({}))
-    spyOn(component,'initRecycle')
-    component.recycleAddressControl.setValue('Address')
+    translateService.get.and.returnValue(of('CONFIRM_RECYCLING_PICKUP'))
+    spyOn(component, 'initRecycle')
+    spyOn(component.addressComponent, 'load')
+    component.addressId = '1'
     component.recycleQuantityControl.setValue(100)
     component.pickup.setValue(true)
     component.pickUpDateControl.setValue('10/7/2018')
-    const recycle = { isPickUp: true, date: '10/7/2018', UserId: undefined, address: 'Address', quantity: 100 }
+    const recycle = { isPickUp: true, date: '10/7/2018', UserId: undefined, AddressId: '1', quantity: 100 }
     component.save()
     expect(recycleService.save.calls.count()).toBe(1)
     expect(recycleService.save.calls.argsFor(0)[0]).toEqual(recycle)
     expect(component.initRecycle).toHaveBeenCalled()
-    expect(component.confirmation).toBe('Thank you for using our recycling service. We will pick up your pomace on 10/7/2018.')
+    expect(component.addressComponent.load).toHaveBeenCalled()
+    expect(translateService.get).toHaveBeenCalledWith('CONFIRM_RECYCLING_PICKUP', { pickupdate: '10/7/2018' })
   })
 
   it('should hold existing recycles', () => {
-    recycleService.find.and.returnValue(of([ { quantity: 1 }, { quantity: 2 }]))
+    recycleService.find.and.returnValue(of([{ quantity: 1 }, { quantity: 2 }]))
     component.ngOnInit()
     expect(component.recycles.length).toBe(2)
     expect(component.recycles[0].quantity).toBe(1)
@@ -149,12 +186,12 @@ describe('RecycleComponent', () => {
     expect(component.recycles.length).toBe(0)
   })
 
-  it('should hold nothing on error from backend API', () => fakeAsync(() => {
+  it('should hold nothing on error from backend API', () => {
     recycleService.find.and.returnValue(throwError('Error'))
     console.log = jasmine.createSpy('log')
     component.ngOnInit()
     expect(console.log).toHaveBeenCalledWith('Error')
-  }))
+  })
 
   it('should log the error on retrieving the user', fakeAsync(() => {
     userService.whoAmI.and.returnValue(throwError('Error'))
